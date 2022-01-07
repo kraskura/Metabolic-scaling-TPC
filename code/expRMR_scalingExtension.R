@@ -1,5 +1,5 @@
 
-
+library(weathermetrics)
 # 1. Multiple regression model, MTE (Downs et al 2008 Funct Ecol, https://www.jstor.org/stable/20142797)
 # ln(MR) = ln(a) + b*ln(BW) + c(1000/T)
 # c = -1E/1000k # k = Boltz const. 
@@ -66,7 +66,7 @@ b <- 0.89
 E <- 0.63
   
 # create 
-dd<-expand.grid(BW=seq(100,1000, 100), K = (celsius.to.kelvin(seq(5,25))), d=c(-0.1, -0.01, -0.05), E = c(0.5, 0.63, 0.2))
+dd<-expand.grid(BW=c(10, 100, 1000), K = (celsius.to.kelvin(seq(5,25))), d=c(-0.1), E = c(0.63))
 dd$lnMR1<-0
 dd$lnMRi<-0
 
@@ -87,7 +87,7 @@ i.exp.mod1<-function(a, b, E, k_Boltz = (8.62*10^(-5)), K, BW, d){
 }
 
 for(i in 1:nrow(dd)){
-  dd$lnMR1[i]<-simple.exp.mod1(a=15, b=0.89, E=0.6, K = dd$K[i], BW = dd$BW[i])
+  dd$lnMR1[i]<-simple.exp.mod1(a=15, b=0.75, E=dd$E[i], K = dd$K[i], BW = dd$BW[i])
   dd$lnMRi[i]<-i.exp.mod1(a=15, b=0.75, E=dd$E[i], K = dd$K[i], BW = dd$BW[i], d =dd$d[i])
 }
 
@@ -100,8 +100,10 @@ ggplot(dd, aes(x = K, y = exp(lnMR1)/BW, size = BW, group = BW))+
 # interaction model, plotted mass specific 
 ggplot(dd, aes(x = K, y = exp(lnMRi)/BW, group = interaction(E,d), color = d))+
   geom_line(size=1)+
+  geom_line(mapping = aes(x = K, y = exp(lnMR1)/BW, group = interaction(E,d)), color="red")+
   theme_light()+
-  facet_wrap(.~BW, scales = "free")
+  geom_vline(xintercept = 295)+
+  facet_wrap(.~BW)
 
 # top numbers in each panel are E (acrtiv energy.) and bottom is d (the interaction term in model)
 ggplot(dd, aes(x = K, y = exp(lnMRi)/BW, group = BW, color = BW))+
